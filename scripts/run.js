@@ -19,7 +19,15 @@ async function main() {
 
   // This creates a local Ethereum network, just for this contract. 
   // After the script completes, it'll destroy that local network.
-  const gameContract = await gameContractFactory.deploy();
+  const gameContract = await gameContractFactory.deploy(
+    ["Brad", "Leo", "Jessica"], // Names
+    ["https://i.imgur.com/hES7D98.jpeg",
+    "https://i.imgur.com/pKd5Sdk.png",
+    "https://i.imgur.com/59lmfaj.jpeg"
+    ],
+    [100, 200, 300],
+    [100, 70, 90]
+  );
 
   // Wait until the contract is mined and deployed to the local blockchain
   await gameContract.deployed();
