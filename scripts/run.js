@@ -33,6 +33,23 @@ async function main() {
   await gameContract.deployed();
 
   console.log("Contract deployed to:", gameContract.address);
+
+  let txn;
+  txn = await gameContract.mintCharacterNFT(0);
+  await txn.wait();
+  txn = await gameContract.mintCharacterNFT(1);
+  await txn.wait();
+  txn = await gameContract.mintCharacterNFT(2);
+  await txn.wait();
+
+  tokenUri = await gameContract.tokenURI(1);
+  console.log("Token URIL:", tokenUri);
+  tokenUri = await gameContract.tokenURI(2);
+  console.log("Token URIL:", tokenUri);
+  tokenUri = await gameContract.tokenURI(3);
+  console.log("Token URIL:", tokenUri);
+  
+//   txn = await gameContract.mintCharacterNFT(3);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
