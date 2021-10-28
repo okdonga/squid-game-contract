@@ -25,8 +25,12 @@ async function main() {
     "https://i.imgur.com/pKd5Sdk.png",
     "https://i.imgur.com/59lmfaj.jpeg"
     ],
-    [100, 200, 300],
-    [100, 70, 90]
+    [100, 200, 300], // hp
+    [100, 70, 90], // damage
+    "Squid",
+    "https://i.imgur.com/EdWSqadb.jpg",
+    1000,
+    50
   );
 
   // Wait until the contract is mined and deployed to the local blockchain
@@ -35,20 +39,27 @@ async function main() {
   console.log("Contract deployed to:", gameContract.address);
 
   let txn;
-  txn = await gameContract.mintCharacterNFT(0);
-  await txn.wait();
-  txn = await gameContract.mintCharacterNFT(1);
-  await txn.wait();
+//   txn = await gameContract.mintCharacterNFT(0);
+//   await txn.wait();  
   txn = await gameContract.mintCharacterNFT(2);
   await txn.wait();
+//   txn = await gameContract.mintCharacterNFT(2);
+//   await txn.wait();
 
-  tokenUri = await gameContract.tokenURI(1);
-  console.log("Token URIL:", tokenUri);
-  tokenUri = await gameContract.tokenURI(2);
-  console.log("Token URIL:", tokenUri);
-  tokenUri = await gameContract.tokenURI(3);
-  console.log("Token URIL:", tokenUri);
+  txn = await gameContract.attackBoss();
+  await txn.wait();
+
+  txn = await gameContract.attackBoss();
+  await txn.wait();
+
+//   tokenUri = await gameContract.tokenURI(1);
+//   console.log("Token URIL:", tokenUri);
+//   tokenUri = await gameContract.tokenURI(2);
+//   console.log("Token URIL:", tokenUri);
+//   tokenUri = await gameContract.tokenURI(3);
+//   console.log("Token URIL:", tokenUri);
   
+
 //   txn = await gameContract.mintCharacterNFT(3);
 }
 
