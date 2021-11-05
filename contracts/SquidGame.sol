@@ -60,7 +60,7 @@ contract SquidGame is ERC721 {
         uint bossHp,
         uint bossAttackDamage
     ) 
-        ERC721("Fighters", "REP")
+        ERC721("SquidGame", "SQU")
     {
         console.log("Deploying a SquidGame contract");
         // Initialize the boss. 
