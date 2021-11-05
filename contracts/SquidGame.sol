@@ -12,7 +12,7 @@ import "./libraries/Base64.sol";
 
 import "hardhat/console.sol";
 
-contract EpicGame is ERC721 {
+contract SquidGame is ERC721 {
     // A struct holds all the character's attributes 
     struct CharacterAttributes {
         uint256 characterIndex;
@@ -62,7 +62,7 @@ contract EpicGame is ERC721 {
     ) 
         ERC721("Fighters", "REP")
     {
-        console.log("Deploying a EpicGame contract");
+        console.log("Deploying a SquidGame contract");
         // Initialize the boss. 
         bigBoss = BigBoss({
             name: bossName,
@@ -139,7 +139,7 @@ contract EpicGame is ERC721 {
                         charAttributes.name,
                         ' -- NFT #: ',
                         Strings.toString(_tokenId),
-                        '", "description": "This is an NFT that lets people play in the game Metaverse Slayer!", "image": "',
+                        '", "description": "Squid Game Characters NFT", "image": "ipfs://',
                         charAttributes.imageURI,
                         '", "attributes": [ { "trait_type": "Health Points", "value": ',strHp,', "max_value":',strMaxHp,'}, { "trait_type": "Attack Damage", "value": ',
                         strAttackDamage,'} ]}'
