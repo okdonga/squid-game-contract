@@ -25,4 +25,9 @@ module.exports = {
       accounts: [process.env.PRIVATE_RINKEBY_KEY],
     },
   },
+  mainnet: {
+    chainId: 1,
+    url: process.env.ALCHEMY_MAINNET_RPC_URL,
+    accounts: [process.env.PRIVATE_KEY],
+  },
 };
