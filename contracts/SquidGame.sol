@@ -23,11 +23,13 @@ contract SquidGame is ERC721Enumerable, Ownable {
     Counters.Counter private _tokenIds;
 
     CharacterAttributes[] defaultCharacters;
+    
+    uint256 public constant tokenPrice = 1000000000000000; //0.001 ETH
 
-    // tokenId => NFT attributes mapping 
-    mapping(uint256 => CharacterAttributes) public nftHolderAttributes;
+    // tokenId => NFT attributes
+    mapping(uint256 => CharacterAttributes) private nftHolderAttributes;
 
-    // Mapping from token ID to owner address (owner can have multiple NFTs)
+    // token ID => owner address (owner can have multiple NFTs)
     mapping(uint256 => address) private _owners;
 
     event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
@@ -83,13 +85,26 @@ contract SquidGame is ERC721Enumerable, Ownable {
         _tokenIds.increment();
     }
 
-    function mintCharacterNFT(uint256 _characterIndex) external {
+    function mintCharacterNFT(uint256 _characterIndex) external payable {
+        require(_characterIndex < defaultCharacters.length, "Not a valid index");
+        require(tokenPrice <= msg.value, "Ether value sent is not correct");
+
+        // check if _characterIndex already minted
+        uint256 totalNFTs = totalSupply();
+        uint256 tokenId;
+        bool isMintedAlready = false;
+        for (tokenId = 1; tokenId <= totalNFTs; tokenId++) {
+            if (nftHolderAttributes[tokenId].characterIndex == _characterIndex) {
+                isMintedAlready = true;
+                break;
+            }
+        }
+
+        require(isMintedAlready == false, "The selected characterIndex is minted already");
+
         // Starts at 1 since it's being incremented in the constructor
         uint256 newItemId = _tokenIds.current();
-
         _safeMint(msg.sender, newItemId);
-
-        require(_characterIndex < defaultCharacters.length, "Not a valid index");
         nftHolderAttributes[newItemId] = CharacterAttributes({
             characterIndex: _characterIndex,
             name: defaultCharacters[_characterIndex].name,
@@ -186,29 +201,19 @@ contract SquidGame is ERC721Enumerable, Ownable {
     /**
      * Returns a list of tokens owned by _owner
      */
-    function tokensOfOwner(address _owner) external view returns(uint256[] memory ownerTokens) {
+    function tokensOfOwner(address _owner) external view returns(uint256[] memory) {
         uint256 tokenCount = balanceOf(_owner);
 
         if (tokenCount == 0) {
             // Return an empty array
             return new uint256[](0);
         } else {
-            uint256[] memory result = new uint256[](tokenCount);
-            uint256 totalNFTs = totalSupply();
-            uint256 resultIndex = 0;
-
-            // We count on the fact that all NFTs have IDs starting at 1 and increasing
-            // sequentially up to the totalNFTs count.
-            uint256 nftId;
-
-            for (nftId = 1; nftId <= totalNFTs; nftId++) {
-                if (_owners[nftId] == _owner) {
-                    result[resultIndex] = nftId;
-                    resultIndex++;
-                }
+            uint256[] memory tokensId = new uint256[](tokenCount);
+            for (uint256 i; i < tokenCount; i++) {
+                console.log(tokenOfOwnerByIndex(_owner, i));
+                tokensId[i] = tokenOfOwnerByIndex(_owner, i);
             }
-
-            return result;
+            return tokensId;
         }
     }
 }
