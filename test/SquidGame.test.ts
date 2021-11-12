@@ -8,6 +8,7 @@ describe("SquidGame NFT", function () {
   let squidGameContract: Contract;
   let owner: SignerWithAddress;
   let address1: SignerWithAddress;
+  let tokenPrice: number;
 
   beforeEach(async () => {
     const squidGameFactory = await ethers.getContractFactory(
@@ -29,49 +30,103 @@ describe("SquidGame NFT", function () {
       2000,
       100
     );
+
+    tokenPrice = await squidGameContract.tokenPrice();
   });
 
-  it("Should initialize Squid Game contract", async function () {
-    expect(await squidGameContract.name()).to.equal("SquidGame");
-    expect(await squidGameContract.symbol()).to.equal("SQU");
-    expect(await squidGameContract.totalSupply()).to.equal(0); // Nothing is minted 
-  });
-
-  it("Should set the right owner", async () => {
-    expect(await squidGameContract.owner()).to.equal(await owner.address);
-  });
-
-  it("Should mint a token for 0.001 ether", async function () {
-    const tokenPrice = await squidGameContract.tokenPrice();
-    const tokenId = await squidGameContract.totalSupply();
-    const characterIndex = 0;
-    expect(
-      await squidGameContract.mintCharacterNFT(characterIndex, {
+  describe("constructor", function () {
+    it("Should initialize Squid Game contract", async function () {
+      expect(await squidGameContract.name()).to.equal("SquidGame");
+      expect(await squidGameContract.symbol()).to.equal("SQU");
+      expect(await squidGameContract.totalSupply()).to.equal(0); // Nothing is minted 
+    });
+  
+    it("Should set the right owner", async () => {
+      expect(await squidGameContract.owner()).to.equal(await owner.address);
+    });
+  })
+  
+  describe("mintCharacterNFT", function () {
+    it("Should mint a token for 0.001 ether", async function () {
+      const tokenId = await squidGameContract.totalSupply();
+      const characterIndex = 0;
+      expect(
+        await squidGameContract.mintCharacterNFT(characterIndex, {
+          value: tokenPrice,
+        })
+      )
+      .to.emit(squidGameContract, "CharacterNFTMinted")
+      .withArgs(owner.address, tokenId+1, characterIndex);
+    });
+  
+    it('Should return total number of tokens owned by an address', async function() {
+      await squidGameContract.mintCharacterNFT(0, {
         value: tokenPrice,
       })
-    )
-    .to.emit(squidGameContract, "CharacterNFTMinted")
-    .withArgs(owner.address, tokenId+1, characterIndex);
-  });
-
-  it('Should return total number of tokens owned by an address', async function() {
-    const tokenPrice = await squidGameContract.tokenPrice();
-    await squidGameContract.mintCharacterNFT(0, {
-      value: tokenPrice,
+  
+      await squidGameContract.mintCharacterNFT(1, {
+        value: tokenPrice,
+      })
+  
+      const tokensId = await squidGameContract.tokensOfOwner(owner.address);
+      expect(tokensId[0]).to.equal(1);
+      expect(tokensId[1]).to.equal(2);   
+    })
+  
+    it('Should error and revert if the _characterIndex is greater than the count of default characters', async function() {
+      await expect(squidGameContract.mintCharacterNFT(100, {
+        value: tokenPrice,
+      })).to.revertedWith('Not a valid index');
     })
 
-    await squidGameContract.mintCharacterNFT(1, {
-      value: tokenPrice,
+    it('Should error and revert if the ether provided is not enough', async function() {
+      await expect(squidGameContract.mintCharacterNFT(0, {
+        value: 1, // 1wei
+      })).to.revertedWith('Ether value sent is not correct');
     })
 
-    const tokensId = await squidGameContract.tokensOfOwner(owner.address);
-    expect(tokensId[0]).to.equal(1);
-    expect(tokensId[1]).to.equal(2);
+    it('Should error and revert if the _characterIndex is already minted', async function() {
+      await squidGameContract.mintCharacterNFT(3, {
+        value: tokenPrice,
+      })
+
+      await squidGameContract.mintCharacterNFT(2, {
+        value: tokenPrice,
+      })
+  
+      await expect(squidGameContract.mintCharacterNFT(3, {
+        value: tokenPrice,
+      })).to.revertedWith('The selected characterIndex is minted already')
+    })
   })
 
-  it('Should allow minting of multiple tokens by the same owner', async function() {
+  describe("tokenURI", function () {
+    it('--', async function() {
+      await squidGameContract.mintCharacterNFT(3, {
+        value: tokenPrice,
+      })
 
+      expect(await squidGameContract.tokenURI(1)).to.equal("data:application/json;base64,eyJuYW1lIjogIk9oIElsbmFtIC0tIE5GVCAjOiAxIiwgImRlc2NyaXB0aW9uIjogIlNxdWlkIEdhbWUgQ2hhcmFjdGVycyBORlQiLCAiaW1hZ2UiOiAiaXBmczovL1FtV0E4RjJ4Vnd2Uk1BTFVyZkpiTlFEY1lzcWpzRWhHMUI2c0I1cEN0eGdQMVEiLCAiYXR0cmlidXRlcyI6IFsgeyAidHJhaXRfdHlwZSI6ICJIZWFsdGggUG9pbnRzIiwgInZhbHVlIjogNjAwLCAibWF4X3ZhbHVlIjo2MDB9LCB7ICJ0cmFpdF90eXBlIjogIkF0dGFjayBEYW1hZ2UiLCAidmFsdWUiOiAzMH0gXX0=");
+    })
   })
 
-  // 같은 _characterIndex index 는 두번 minting 할수 없다 
+  describe("attackBoss", function() {
+    it('Should deduct health points from the boss and the character respectively', async function() {
+      await squidGameContract.mintCharacterNFT(3, {
+        value: tokenPrice,
+      })
+      let boss = await squidGameContract.bigBoss()
+      let bossHp = boss[2];
+      let bossAttackDamage = boss[4];
+      let character = await squidGameContract.nftHolderAttributes(1);
+      let characterHp = character[3];
+      let characterAttackDamage = character[5];
+
+      expect(
+        await squidGameContract.attackBoss(1)
+      )
+      .to.emit(squidGameContract, "AttackComplete")
+      .withArgs(bossHp.sub(characterAttackDamage), characterHp.sub(bossAttackDamage));
+    })
+  })
 });

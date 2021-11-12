@@ -27,7 +27,7 @@ contract SquidGame is ERC721Enumerable, Ownable {
     uint256 public constant tokenPrice = 1000000000000000; //0.001 ETH
 
     // tokenId => NFT attributes
-    mapping(uint256 => CharacterAttributes) private nftHolderAttributes;
+    mapping(uint256 => CharacterAttributes) public nftHolderAttributes;
 
     // token ID => owner address (owner can have multiple NFTs)
     mapping(uint256 => address) private _owners;
@@ -89,10 +89,10 @@ contract SquidGame is ERC721Enumerable, Ownable {
         require(_characterIndex < defaultCharacters.length, "Not a valid index");
         require(tokenPrice <= msg.value, "Ether value sent is not correct");
 
-        // check if _characterIndex already minted
+        // check if _characterIndex is already minted
         uint256 totalNFTs = totalSupply();
-        uint256 tokenId;
         bool isMintedAlready = false;
+        uint256 tokenId;
         for (tokenId = 1; tokenId <= totalNFTs; tokenId++) {
             if (nftHolderAttributes[tokenId].characterIndex == _characterIndex) {
                 isMintedAlready = true;
@@ -186,6 +186,8 @@ contract SquidGame is ERC721Enumerable, Ownable {
         emit AttackComplete(bigBoss.hp, player.hp);
     }
 
+    /// @notice Returns all the relevant information about a specific character
+    /// @param _tokenId The ID of the character of interest 
     function getCharacterAttributes(uint256 _tokenId) public view returns (CharacterAttributes memory) {
         return nftHolderAttributes[_tokenId];
     }
@@ -194,6 +196,7 @@ contract SquidGame is ERC721Enumerable, Ownable {
         return defaultCharacters;
     }
 
+    /// @notice Returns all the relevant information about the boss 
     function getBigBoss() public view returns (BigBoss memory) {
         return bigBoss;
     }
