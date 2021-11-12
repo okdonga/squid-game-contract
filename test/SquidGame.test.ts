@@ -23,11 +23,11 @@ describe("SquidGame NFT", function () {
       "QmWA8F2xVwvRMALUrfJbNQDcYsqjsEhG1B6sB5pCtxgP1Q",
       "QmZe6wSrFWRGJ1tnYzo9tQQek4BhSfsJ28zbpr3qJmKV2M",
       ],
-      [1000, 1500, 800, 600, 2000], // hp
-      [10, 20, 10, 30, 30], // damage
+      [100, 150, 80, 60, 500], // hp
+      [10, 20, 10, 30, 200], // damage
       "Front Man",
       "QmbK1pNvyVvMNAhy66MTMGwNPgyd8YHy8cyc4w8VPZEzR4",
-      2000,
+      200,
       100
     );
 
@@ -106,13 +106,13 @@ describe("SquidGame NFT", function () {
         value: tokenPrice,
       })
 
-      expect(await squidGameContract.tokenURI(1)).to.equal("data:application/json;base64,eyJuYW1lIjogIk9oIElsbmFtIC0tIE5GVCAjOiAxIiwgImRlc2NyaXB0aW9uIjogIlNxdWlkIEdhbWUgQ2hhcmFjdGVycyBORlQiLCAiaW1hZ2UiOiAiaXBmczovL1FtV0E4RjJ4Vnd2Uk1BTFVyZkpiTlFEY1lzcWpzRWhHMUI2c0I1cEN0eGdQMVEiLCAiYXR0cmlidXRlcyI6IFsgeyAidHJhaXRfdHlwZSI6ICJIZWFsdGggUG9pbnRzIiwgInZhbHVlIjogNjAwLCAibWF4X3ZhbHVlIjo2MDB9LCB7ICJ0cmFpdF90eXBlIjogIkF0dGFjayBEYW1hZ2UiLCAidmFsdWUiOiAzMH0gXX0=");
+      expect(await squidGameContract.tokenURI(1)).to.equal("data:application/json;base64,eyJuYW1lIjogIk9oIElsbmFtIC0tIE5GVCAjOiAxIiwgImRlc2NyaXB0aW9uIjogIlNxdWlkIEdhbWUgQ2hhcmFjdGVycyBORlQiLCAiaW1hZ2UiOiAiaXBmczovL1FtV0E4RjJ4Vnd2Uk1BTFVyZkpiTlFEY1lzcWpzRWhHMUI2c0I1cEN0eGdQMVEiLCAiYXR0cmlidXRlcyI6IFsgeyAidHJhaXRfdHlwZSI6ICJIZWFsdGggUG9pbnRzIiwgInZhbHVlIjogNjAsICJtYXhfdmFsdWUiOjYwfSwgeyAidHJhaXRfdHlwZSI6ICJBdHRhY2sgRGFtYWdlIiwgInZhbHVlIjogMzB9IF19");
     })
   })
 
   describe("attackBoss", function() {
     it('Should deduct health points from the boss and the character respectively', async function() {
-      await squidGameContract.mintCharacterNFT(3, {
+      await squidGameContract.mintCharacterNFT(1, {
         value: tokenPrice,
       })
       let boss = await squidGameContract.bigBoss()
@@ -127,6 +127,59 @@ describe("SquidGame NFT", function () {
       )
       .to.emit(squidGameContract, "AttackComplete")
       .withArgs(bossHp.sub(characterAttackDamage), characterHp.sub(bossAttackDamage));
+    })
+
+    it('Should attack, then if hp is less than the attack damage, hp should set to 0', async function() {
+      await squidGameContract.mintCharacterNFT(1, {
+        value: tokenPrice,
+      })
+      let boss = await squidGameContract.bigBoss()
+      let bossHp = boss[2];
+      let bossAttackDamage = boss[4];
+      let character = await squidGameContract.nftHolderAttributes(1);
+      let characterHp = character[3];
+      let characterAttackDamage = character[5];
+
+      // attack twice 
+      await squidGameContract.attackBoss(1);
+      expect(
+        await squidGameContract.attackBoss(1)
+      )
+      .to.emit(squidGameContract, "AttackComplete")
+      .withArgs(bossHp.sub(characterAttackDamage).sub(characterAttackDamage), 0);
+    })
+
+    it('If a player has 0 hp, and an attack is attempted, the transaction is reverted', async function() {
+      await squidGameContract.mintCharacterNFT(1, {
+        value: tokenPrice,
+      })
+      let boss = await squidGameContract.bigBoss()
+      let bossHp = boss[2];
+      let bossAttackDamage = boss[4];
+      let character = await squidGameContract.nftHolderAttributes(1);
+      let characterHp = character[3];
+      let characterAttackDamage = character[5];
+
+      // attack three times  
+      await squidGameContract.attackBoss(1);
+      await squidGameContract.attackBoss(1);
+
+      await expect(squidGameContract.attackBoss(1)).to.revertedWith("Player doesn't have enough HP")
+    })
+
+    it('If a boss has 0 hp, and an attack is attempted, the transaction is reverted', async function() {
+      await squidGameContract.mintCharacterNFT(4, {
+        value: tokenPrice,
+      })
+      let boss = await squidGameContract.bigBoss()
+      let bossHp = boss[2];
+      let bossAttackDamage = boss[4];
+      let character = await squidGameContract.nftHolderAttributes(1);
+      let characterHp = character[3];
+      let characterAttackDamage = character[5];
+
+      await squidGameContract.attackBoss(1);
+      await expect(squidGameContract.attackBoss(1)).to.revertedWith("BigBoss doesn't have enough HP")
     })
   })
 });
