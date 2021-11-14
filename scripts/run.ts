@@ -3,7 +3,8 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
-const hre = require("hardhat");
+// const hre = require("hardhat");
+import hre from "hardhat";
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -16,7 +17,9 @@ async function main() {
   // We get the contract to deploy
   // This compiles the contract, generate necessary files under the `artifacts` directory 
   const gameContractFactory = await hre.ethers.getContractFactory("SquidGame");
+  const [owner] = await hre.ethers.getSigners();
 
+  console.log(owner.address)
   // This creates a local Ethereum network, just for this contract. 
   // After the script completes, it'll destroy that local network.
   const gameContract = await gameContractFactory.deploy(
@@ -40,28 +43,39 @@ async function main() {
 
   console.log("Contract deployed to:", gameContract.address);
 
+  const tokenPrice = await gameContract.TOKEN_PRICE();
   let txn;
-//   txn = await gameContract.mintCharacterNFT(0);
-//   await txn.wait();  
-  txn = await gameContract.mintCharacterNFT(2);
+  txn = await gameContract.mintCharacterNFT(0, {
+    value: tokenPrice
+  });
+  await txn.wait();  
+  txn = await gameContract.mintCharacterNFT(2, {
+    value: tokenPrice
+  });
   await txn.wait();
 //   txn = await gameContract.mintCharacterNFT(2);
 //   await txn.wait();
 
-  txn = await gameContract.attackBoss();
-  await txn.wait();
+//   txn = await gameContract.attackBoss();
+//   await txn.wait();
 
-  txn = await gameContract.attackBoss();
-  await txn.wait();
+//   txn = await gameContract.attackBoss();
+//   await txn.wait();
 
-  tokenUri = await gameContract.tokenURI(1);
-  console.log("Token URIL:", tokenUri);
+//   tokenUri = await gameContract.tokenURI(2);
+//   console.log("Token URIL:", tokenUri);
 //   tokenUri = await gameContract.tokenURI(2);
 //   console.log("Token URIL:", tokenUri);
 //   tokenUri = await gameContract.tokenURI(3);
 //   console.log("Token URIL:", tokenUri);
   
-
+    txn = await gameContract.tokensOfOwner(owner.address)
+    // await txn.wait();
+    console.log(`Contracts owned by ${owner.address}`);
+    txn.forEach((t: { toString: () => string; }) => {
+        console.log(t.toString())
+    })
+    // console.log(txn[0].toString())
 //   txn = await gameContract.mintCharacterNFT(3);
 }
 

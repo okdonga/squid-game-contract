@@ -1,3 +1,5 @@
+import hre from "hardhat";
+
 async function main() {
   const gameContractFactory = await hre.ethers.getContractFactory("SquidGame");
   const gameContract = await gameContractFactory.deploy(
