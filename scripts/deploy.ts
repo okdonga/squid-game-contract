@@ -1,6 +1,10 @@
 import hre from "hardhat";
+import { networkConfig } from '../helper-hardhat-config'
 
 async function main() {
+  let chainId = 'default';
+  let chainlinkFee = networkConfig[chainId].chainlinkFee;
+  let interval = networkConfig[chainId].interval;
   const gameContractFactory = await hre.ethers.getContractFactory("SquidGame");
   const gameContract = await gameContractFactory.deploy(
     ["Kang Saebyeok", "Seong Gihoon", "Han Minyeo", "Oh Ilnam", "Jang Deoksu"], // Names
@@ -15,32 +19,13 @@ async function main() {
     "Front Man",
     "QmbK1pNvyVvMNAhy66MTMGwNPgyd8YHy8cyc4w8VPZEzR4",
     2000,
-    100
+    100,
+    chainlinkFee,
+    interval
   );
 
   await gameContract.deployed();
   console.log("Contract deployed to:", gameContract.address);
-
-//   let txn;
-//   txn = await gameContract.mintCharacterNFT(0);
-//   await txn.wait();
-//   console.log("Minted NFT #1");
-
-//   txn = await gameContract.mintCharacterNFT(1);
-//   await txn.wait();
-//   console.log("Minted NFT #2");
-  
-//   txn = await gameContract.mintCharacterNFT(2);
-//   await txn.wait();
-//   console.log("Minted NFT #3");
-
-//   txn = await gameContract.attackBoss();
-//   await txn.wait();
-
-//   txn = await gameContract.attackBoss();
-//   await txn.wait();
-
-//   console.log("Done deploying and minting!");
 }
 
 main()

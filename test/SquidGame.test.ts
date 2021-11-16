@@ -1,16 +1,28 @@
-import { ethers } from "hardhat"; // Import the Ethers library
+import { ethers } from "hardhat";
+import hre from "hardhat";
 import { expect } from "chai"
 import { beforeEach } from "mocha";
 import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { networkConfig } from '../helper-hardhat-config'
+// import { HardhatRuntimeEnvironment } from "hardhat/types";
+// import { useEnvironment } from "./helpers";
 
 describe("SquidGame NFT", function () {
   let squidGameContract: Contract;
   let owner: SignerWithAddress;
   let address1: SignerWithAddress;
   let tokenPrice: number;
+  let chainlinkFee: string; 
+  let interval: string;
 
   beforeEach(async () => {
+    
+    // const chainId = await hre.ethers.getChainId();
+    const chainId = 31337;
+    chainlinkFee = networkConfig[chainId].chainlinkFee;
+    interval = networkConfig[chainId].chainlinkFee;
+
     const squidGameFactory = await ethers.getContractFactory(
       "SquidGame"
     );
@@ -28,10 +40,12 @@ describe("SquidGame NFT", function () {
       "Front Man",
       "QmbK1pNvyVvMNAhy66MTMGwNPgyd8YHy8cyc4w8VPZEzR4",
       200,
-      100
+      100,
+      chainlinkFee,
+      interval
     );
 
-    tokenPrice = await squidGameContract.tokenPrice();
+    tokenPrice = await squidGameContract.TOKEN_PRICE();
   });
 
   describe("constructor", function () {
@@ -101,7 +115,7 @@ describe("SquidGame NFT", function () {
   })
 
   describe("tokenURI", function () {
-    it('--', async function() {
+    it('Should return tokenURI', async function() {
       await squidGameContract.mintCharacterNFT(3, {
         value: tokenPrice,
       })
@@ -115,7 +129,7 @@ describe("SquidGame NFT", function () {
       await squidGameContract.mintCharacterNFT(1, {
         value: tokenPrice,
       })
-      let boss = await squidGameContract.bigBoss()
+      let boss = await squidGameContract.playerToBoss(owner.address)
       let bossHp = boss[2];
       let bossAttackDamage = boss[4];
       let character = await squidGameContract.nftHolderAttributes(1);
@@ -126,14 +140,14 @@ describe("SquidGame NFT", function () {
         await squidGameContract.attackBoss(1)
       )
       .to.emit(squidGameContract, "AttackComplete")
-      .withArgs(bossHp.sub(characterAttackDamage), characterHp.sub(bossAttackDamage));
+      .withArgs(200 - 20, 150 - 100);
     })
 
-    it('Should attack, then if hp is less than the attack damage, hp should set to 0', async function() {
+    it('Should attack, then if hp is less than the attack damage, hp should be set to 0', async function() {
       await squidGameContract.mintCharacterNFT(1, {
         value: tokenPrice,
       })
-      let boss = await squidGameContract.bigBoss()
+      let boss = await squidGameContract.playerToBoss(owner.address)
       let bossHp = boss[2];
       let bossAttackDamage = boss[4];
       let character = await squidGameContract.nftHolderAttributes(1);
@@ -146,14 +160,14 @@ describe("SquidGame NFT", function () {
         await squidGameContract.attackBoss(1)
       )
       .to.emit(squidGameContract, "AttackComplete")
-      .withArgs(bossHp.sub(characterAttackDamage).sub(characterAttackDamage), 0);
+      .withArgs(160, 0);
     })
 
     it('If a player has 0 hp, and an attack is attempted, the transaction is reverted', async function() {
       await squidGameContract.mintCharacterNFT(1, {
         value: tokenPrice,
       })
-      let boss = await squidGameContract.bigBoss()
+      let boss = await squidGameContract.playerToBoss(owner.address)
       let bossHp = boss[2];
       let bossAttackDamage = boss[4];
       let character = await squidGameContract.nftHolderAttributes(1);
@@ -171,7 +185,7 @@ describe("SquidGame NFT", function () {
       await squidGameContract.mintCharacterNFT(4, {
         value: tokenPrice,
       })
-      let boss = await squidGameContract.bigBoss()
+      let boss = await squidGameContract.playerToBoss(owner.address)
       let bossHp = boss[2];
       let bossAttackDamage = boss[4];
       let character = await squidGameContract.nftHolderAttributes(1);

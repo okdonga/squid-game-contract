@@ -4,7 +4,8 @@
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 // const hre = require("hardhat");
-import hre from "hardhat";
+import { ethers } from "hardhat";
+import { networkConfig } from '../helper-hardhat-config'
 
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
@@ -16,10 +17,14 @@ async function main() {
 
   // We get the contract to deploy
   // This compiles the contract, generate necessary files under the `artifacts` directory 
-  const gameContractFactory = await hre.ethers.getContractFactory("SquidGame");
-  const [owner] = await hre.ethers.getSigners();
+  const gameContractFactory = await ethers.getContractFactory("SquidGame");
+  const [owner] = await ethers.getSigners();
 
-  console.log(owner.address)
+  // console.log(owner.address)
+  let chainId = 'default';
+  let chainlinkFee = networkConfig[chainId].chainlinkFee;
+  let interval = networkConfig[chainId].chainlinkFee;
+
   // This creates a local Ethereum network, just for this contract. 
   // After the script completes, it'll destroy that local network.
   const gameContract = await gameContractFactory.deploy(
@@ -35,7 +40,9 @@ async function main() {
     "Front Man",
     "QmbK1pNvyVvMNAhy66MTMGwNPgyd8YHy8cyc4w8VPZEzR4",
     2000,
-    100
+    100,
+    chainlinkFee,
+    interval
   );
 
   // Wait until the contract is mined and deployed to the local blockchain

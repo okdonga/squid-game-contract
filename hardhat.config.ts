@@ -2,7 +2,7 @@
 require('dotenv').config()
 import { task } from "hardhat/config"; // import function
 import "@nomiclabs/hardhat-waffle"; // change require to import
-
+import '@typechain/hardhat'
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
@@ -26,6 +26,11 @@ module.exports = {
       url: process.env.ALCHEMY_RINKEBY_RPC_URL,
       accounts: [process.env.PRIVATE_RINKEBY_KEY],
     },
+    kovan: {
+      url: process.env.ALCHEMY_KOVAN_RPC_URL,
+      accounts: [process.env.PRIVATE_KOVAN_KEY],
+      saveDeployments: true,
+    }
   },
   mainnet: {
     chainId: 1,

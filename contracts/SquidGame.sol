@@ -6,10 +6,12 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
+// import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 import "./libraries/Base64.sol";
 import "hardhat/console.sol";
 
-contract SquidGame is ERC721Enumerable, Ownable {
+contract SquidGame is ERC721Enumerable, Ownable, KeeperCompatibleInterface {
     struct CharacterAttributes {
         uint256 characterIndex;
         string name;
@@ -18,24 +20,9 @@ contract SquidGame is ERC721Enumerable, Ownable {
         uint256 maxHp;
         uint256 attackDamage;
     }
-
-    using Counters for Counters.Counter;
-    Counters.Counter private _tokenIds;
-
-    CharacterAttributes[] defaultCharacters;
     
-    uint256 public constant tokenPrice = 1000000000000000; //0.001 ETH
-
-    // tokenId => NFT attributes
-    mapping(uint256 => CharacterAttributes) public nftHolderAttributes;
-
-    // token ID => owner address (owner can have multiple NFTs)
-    mapping(uint256 => address) private _owners;
-
-    event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
-    event AttackComplete(uint256 newBossHp, uint256 newPlayerHp);
-
     struct BigBoss {
+        // uint256 bossIndex;
         string name;
         string imageURI;
         uint hp;
@@ -43,7 +30,34 @@ contract SquidGame is ERC721Enumerable, Ownable {
         uint attackDamage;
     }
 
-    BigBoss public bigBoss;
+    using Counters for Counters.Counter;
+    Counters.Counter private _tokenIds;
+    
+    CharacterAttributes[] defaultCharacters;
+    BigBoss public bigBoss;    
+    
+    uint256 public constant TOKEN_PRICE = 1000000000000000; //0.001 ETH
+    
+    uint256 public lastTimeStamp;
+    uint256 public chainlinkFee;
+    uint256 public interval;
+
+
+    // token ID => owner address (owner can have multiple NFTs)
+    mapping(uint256 => address) private _owners;
+
+    // tokenId => NFT attributes
+    mapping(uint256 => CharacterAttributes) public nftHolderAttributes;
+
+    // the list of tokenIds that need reset 
+    uint256[] lostCharacters; 
+    // mapping(uint256 => GameStatus) public gameRecords;
+
+    // owner address => bossId  
+    mapping(address => BigBoss) public playerToBoss;
+
+    event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
+    event AttackComplete(uint256 newBossHp, uint256 newPlayerHp);
 
     constructor(
         string[] memory characterNames,
@@ -54,7 +68,10 @@ contract SquidGame is ERC721Enumerable, Ownable {
         string memory bossName,
         string memory bossImageURI,
         uint bossHp,
-        uint bossAttackDamage
+        uint bossAttackDamage,
+
+        uint256 _chainlinkFee,
+        uint256 updateInterval
     ) 
         ERC721("SquidGame", "SQU")
     {
@@ -83,11 +100,15 @@ contract SquidGame is ERC721Enumerable, Ownable {
         }
 
         _tokenIds.increment();
+
+        lastTimeStamp = block.timestamp;
+        chainlinkFee = _chainlinkFee;
+        interval = updateInterval;
     }
 
     function mintCharacterNFT(uint256 _characterIndex) external payable {
         require(_characterIndex < defaultCharacters.length, "Not a valid index");
-        require(tokenPrice <= msg.value, "Ether value sent is not correct");
+        require(TOKEN_PRICE <= msg.value, "Ether value sent is not correct");
 
         // check if _characterIndex is already minted
         uint256 totalNFTs = totalSupply();
@@ -101,6 +122,12 @@ contract SquidGame is ERC721Enumerable, Ownable {
         }
 
         require(isMintedAlready == false, "The selected characterIndex is minted already");
+
+        // only if it's user's first token, initialize the bigBoss 
+        uint256 tokenCount = balanceOf(msg.sender);
+        if (tokenCount == 0) {
+            playerToBoss[msg.sender] = bigBoss;
+        }
 
         // Starts at 1 since it's being incremented in the constructor
         uint256 newItemId = _tokenIds.current();
@@ -156,34 +183,41 @@ contract SquidGame is ERC721Enumerable, Ownable {
 
     function attackBoss(uint256 tokenId) public {
         uint256 tokenIdOfPlayer = tokenId;
+        BigBoss storage boss = playerToBoss[msg.sender];
         CharacterAttributes storage player = nftHolderAttributes[tokenIdOfPlayer];
         // console.log("\nPlayer w/ character %s about to attack. Has %s HP and %s AD", player.name, player.hp, player.attackDamage);
-        // console.log("Boss %s has %s HP and %s AD", bigBoss.name, bigBoss.hp, bigBoss.attackDamage);
+        console.log("Boss %s has %s HP and %s AD", bigBoss.name, bigBoss.hp, bigBoss.attackDamage);
         
         // First, check if you own the tokenId 
         require(_owners[tokenId] == msg.sender);
         // Make sure the player has more than 0 HP.
         require(player.hp > 0, "Player doesn't have enough HP");
         // Make sure the boss has more than 0 HP.
-        require(bigBoss.hp > 0, "BigBoss doesn't have enough HP");
+        require(boss.hp > 0, "BigBoss doesn't have enough HP");
         // Allow player to attack boss.
-        if (bigBoss.hp < player.attackDamage) {
-            bigBoss.hp = 0;
+        if (boss.hp < player.attackDamage) {
+            boss.hp = 0;
         } else {
-            bigBoss.hp = bigBoss.hp - player.attackDamage;
+            boss.hp = boss.hp - player.attackDamage;
         }
         
         // Allow boss to attack player.
-        if (player.hp < bigBoss.attackDamage) {
+        if (player.hp < boss.attackDamage) {
             player.hp = 0;
+            
         } else {
-            player.hp = player.hp - bigBoss.attackDamage;
+            player.hp = player.hp - boss.attackDamage;
         }
 
-        // console.log("Boss attacked player. New player hp: %s\n", player.hp);
-        // console.log("Player attacked boss. Boss hp: %s\n", bigBoss.hp);
+        if (boss.hp == 0 || player.hp == 0) {
+            // Game over, recharge hp of all your characters 
+            // Fetch all your characters owned by you 
+            // gameRecords[tokenIdOfPlayer].over = true;
+            lostCharacters.push(tokenId);
+            // gameStatus[tokenIdOfPlayer].lastTimeStamp = block.timestamp;
+        }
 
-        emit AttackComplete(bigBoss.hp, player.hp);
+        emit AttackComplete(boss.hp, player.hp);
     }
 
     /// @notice Returns all the relevant information about a specific character
@@ -197,9 +231,9 @@ contract SquidGame is ERC721Enumerable, Ownable {
     }
 
     /// @notice Returns all the relevant information about the boss 
-    function getBigBoss() public view returns (BigBoss memory) {
-        return bigBoss;
-    }
+    // function getBigBoss() public view returns (BigBoss memory) {
+    //     return bigBoss;
+    // }
 
     /**
      * Returns a list of tokens owned by _owner
@@ -217,6 +251,48 @@ contract SquidGame is ERC721Enumerable, Ownable {
                 tokensId[i] = tokenOfOwnerByIndex(_owner, i);
             }
             return tokensId;
+        }
+    }
+
+    // @dev This is called by Chainlink Keepers to check if work needs to be done
+    // They look for `upkeepNeeded` to return True
+    // The following should be true for this to return true:
+    // 1. The time interval has passed the interval time defined in the constructor
+    // 2. The contract has LINK 
+    // 3. The contract has ETH
+    // We don't use the checkData in this example. The checkData is defined when the Upkeep was registered.
+    function checkUpkeep(bytes memory /* checkData */) public view override returns (bool upkeepNeeded, bytes memory /* performData */) {
+        // bool hasLink = LINK.balanceOf(address(this)) >= chainlinkFee;
+        upkeepNeeded = (((block.timestamp - lastTimeStamp) > interval) &&
+            // hasLink &&
+            (address(this).balance >= 0));
+        
+    }
+
+    // @dev This is called by Chainlink Keepers to handle work
+    // This kicks off a Chainlink VRF call to reset hp of players 
+    // whose games are over 
+    function performUpkeep(bytes calldata /* performData */) external override {
+        // address owner = address(this);
+        // require(
+        //     LINK.balanceOf(owner) >= chainlinkFee,
+        //     "Not enough LINK"
+        // );
+         (bool upkeepNeeded, ) = checkUpkeep("");
+        require(upkeepNeeded, "Upkeep not needed");
+        lastTimeStamp = block.timestamp;
+        uint256 total = lostCharacters.length;
+        for (uint256 i; i < total; i++) {
+            uint256 tokenIdOfPlayer = lostCharacters[i];
+            // Reset character hp
+            CharacterAttributes storage player = nftHolderAttributes[tokenIdOfPlayer];
+            player.hp = player.maxHp;
+
+            // Reset boss hp 
+            BigBoss storage boss = playerToBoss[ownerOf(tokenIdOfPlayer)];
+            if (boss.hp != boss.maxHp) {
+                boss.hp = boss.maxHp;
+            }
         }
     }
 }
