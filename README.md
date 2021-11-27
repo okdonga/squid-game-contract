@@ -1,16 +1,24 @@
-# NFT Squid Game (Mini project)
+# NFT Squid Game Contract
 
-This is a mini NFT game contract that I made after following a tutorial from buildspace 
+This is a full stack NFT minting app running on Ethereum with Polygon & React.js
 
-### Local run: 
+For the frontend code, see [here](https://github.com/okdonga/squid-game-frontend)
+
+### Local setup: 
 
 ```shell
 npx hardhat run scripts/run.js 
+# or 
+npx hardhat run scripts/run.js --network localhost
 ```
 
 ### To deploy:
+I deployed to Polygon network because it's faster, and cheaper. 
+
 ```shell
-npx hardhat run scripts/deploy.js --network rinkeby
+# Deploy to testnet 
+# Make sure you have some MATIC tokens in your wallet 
+npx hardhat run scripts/deploy.js --network mumbai
 ```
 
 ### To test: 
@@ -20,18 +28,17 @@ npx hardhat test
 
 ### Services used
 - Metamask 
-- Hardhat 
 - Alchemy
-- IFRS 
-- pinata 
+- IPFS 
+- Pinata 
 
 ### Tech stack
 - Solidity
 - Hardhat
+- TypeScript
 - Chai
 - Mocha
-- TypeScript
+
 
 ### Front-end 
-- React 
-- TypeScript 
+- React (See [here](https://github.com/okdonga/squid-game-frontend))
