@@ -36,7 +36,7 @@ contract SquidGame is ERC721Enumerable, Ownable, KeeperCompatibleInterface {
     CharacterAttributes[] defaultCharacters;
     BigBoss public bigBoss;    
     
-    uint256 public constant TOKEN_PRICE = 1000000000000000; //0.001 ETH
+    // uint256 public constant TOKEN_PRICE = 1000000000000000; //0.001 ETH
     
     uint256 public lastTimeStamp;
     uint256 public chainlinkFee;
@@ -108,7 +108,7 @@ contract SquidGame is ERC721Enumerable, Ownable, KeeperCompatibleInterface {
 
     function mintCharacterNFT(uint256 _characterIndex) external payable {
         require(_characterIndex < defaultCharacters.length, "Not a valid index");
-        require(TOKEN_PRICE <= msg.value, "Ether value sent is not correct");
+        // require(TOKEN_PRICE <= msg.value, "Ether value sent is not correct");
 
         // check if _characterIndex is already minted
         uint256 totalNFTs = totalSupply();

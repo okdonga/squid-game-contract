@@ -7,19 +7,19 @@ async function main() {
   let interval = networkConfig[chainId].interval;
   const gameContractFactory = await hre.ethers.getContractFactory("SquidGame");
   const gameContract = await gameContractFactory.deploy(
-    ["Kang Saebyeok", "Seong Gihoon", "Han Minyeo", "Oh Ilnam", "Jang Deoksu"], // Names
-    ["QmQi4ovLuzAt8WnG4WVAqxXbstwfL5NbRj5VbJcNGcfAZ9",
-    "QmRaDUWpKaA7oYH92GX3sLeK7wqgDqRtagdyFPQkFrpvNU",
-    "QmSB3iReWfxTihw8g7SA9FLve5fkzu85nUk527kuAKeXo9",
-    "QmWA8F2xVwvRMALUrfJbNQDcYsqjsEhG1B6sB5pCtxgP1Q",
-    "QmZe6wSrFWRGJ1tnYzo9tQQek4BhSfsJ28zbpr3qJmKV2M",
+    [ "Seong Gihoon", "Kang Saebyeok", "Oh Ilnam", "Ali", "Trio"], // Names
+    ["QmWqjVyy8ycXuEQ1pAHee35eNd9VvAinJnJXzyi6nPVhMW/1.png",
+    "QmWqjVyy8ycXuEQ1pAHee35eNd9VvAinJnJXzyi6nPVhMW/2.png",
+    "QmWqjVyy8ycXuEQ1pAHee35eNd9VvAinJnJXzyi6nPVhMW/3.png",
+    "QmWqjVyy8ycXuEQ1pAHee35eNd9VvAinJnJXzyi6nPVhMW/4.png",
+    "QmWqjVyy8ycXuEQ1pAHee35eNd9VvAinJnJXzyi6nPVhMW/5.png",
     ],
-    [1000, 1500, 800, 600, 2000], // hp
-    [10, 20, 10, 30, 30], // damage
+    [100, 80, 80, 60, 200], // hp
+    [10, 20, 10, 20, 30], // damage
     "Front Man",
-    "QmbK1pNvyVvMNAhy66MTMGwNPgyd8YHy8cyc4w8VPZEzR4",
-    2000,
-    100,
+    "QmWhARsTbcRHWK4fhgeS5pRpWGchGT5ivwex4qyrXXR9iV",
+    200,
+    30,
     chainlinkFee,
     interval
   );

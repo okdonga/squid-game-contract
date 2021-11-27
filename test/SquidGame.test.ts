@@ -45,7 +45,7 @@ describe("SquidGame NFT", function () {
       interval
     );
 
-    tokenPrice = await squidGameContract.TOKEN_PRICE();
+    // tokenPrice = await squidGameContract.TOKEN_PRICE();
   });
 
   describe("constructor", function () {
@@ -66,7 +66,7 @@ describe("SquidGame NFT", function () {
       const characterIndex = 0;
       expect(
         await squidGameContract.mintCharacterNFT(characterIndex, {
-          value: tokenPrice,
+          // value: tokenPrice,
         })
       )
       .to.emit(squidGameContract, "CharacterNFTMinted")
@@ -75,11 +75,11 @@ describe("SquidGame NFT", function () {
   
     it('Should return total number of tokens owned by an address', async function() {
       await squidGameContract.mintCharacterNFT(0, {
-        value: tokenPrice,
+        // value: tokenPrice,
       })
   
       await squidGameContract.mintCharacterNFT(1, {
-        value: tokenPrice,
+        // value: tokenPrice,
       })
   
       const tokensId = await squidGameContract.tokensOfOwner(owner.address);
@@ -89,11 +89,11 @@ describe("SquidGame NFT", function () {
   
     it('Should error and revert if the _characterIndex is greater than the count of default characters', async function() {
       await expect(squidGameContract.mintCharacterNFT(100, {
-        value: tokenPrice,
+        // value: tokenPrice,
       })).to.revertedWith('Not a valid index');
     })
 
-    it('Should error and revert if the ether provided is not enough', async function() {
+    it.skip('Should error and revert if the ether provided is not enough', async function() {
       await expect(squidGameContract.mintCharacterNFT(0, {
         value: 1, // 1wei
       })).to.revertedWith('Ether value sent is not correct');
@@ -101,15 +101,15 @@ describe("SquidGame NFT", function () {
 
     it('Should error and revert if the _characterIndex is already minted', async function() {
       await squidGameContract.mintCharacterNFT(3, {
-        value: tokenPrice,
+        // value: tokenPrice,
       })
 
       await squidGameContract.mintCharacterNFT(2, {
-        value: tokenPrice,
+        // value: tokenPrice,
       })
   
       await expect(squidGameContract.mintCharacterNFT(3, {
-        value: tokenPrice,
+        // value: tokenPrice,
       })).to.revertedWith('The selected characterIndex is minted already')
     })
   })
@@ -117,7 +117,7 @@ describe("SquidGame NFT", function () {
   describe("tokenURI", function () {
     it('Should return tokenURI', async function() {
       await squidGameContract.mintCharacterNFT(3, {
-        value: tokenPrice,
+        // value: tokenPrice,
       })
 
       expect(await squidGameContract.tokenURI(1)).to.equal("data:application/json;base64,eyJuYW1lIjogIk9oIElsbmFtIC0tIE5GVCAjOiAxIiwgImRlc2NyaXB0aW9uIjogIlNxdWlkIEdhbWUgQ2hhcmFjdGVycyBORlQiLCAiaW1hZ2UiOiAiaXBmczovL1FtV0E4RjJ4Vnd2Uk1BTFVyZkpiTlFEY1lzcWpzRWhHMUI2c0I1cEN0eGdQMVEiLCAiYXR0cmlidXRlcyI6IFsgeyAidHJhaXRfdHlwZSI6ICJIZWFsdGggUG9pbnRzIiwgInZhbHVlIjogNjAsICJtYXhfdmFsdWUiOjYwfSwgeyAidHJhaXRfdHlwZSI6ICJBdHRhY2sgRGFtYWdlIiwgInZhbHVlIjogMzB9IF19");
@@ -127,7 +127,7 @@ describe("SquidGame NFT", function () {
   describe("attackBoss", function() {
     it('Should deduct health points from the boss and the character respectively', async function() {
       await squidGameContract.mintCharacterNFT(1, {
-        value: tokenPrice,
+        // value: tokenPrice,
       })
       let boss = await squidGameContract.playerToBoss(owner.address)
       let bossHp = boss[2];
@@ -145,7 +145,7 @@ describe("SquidGame NFT", function () {
 
     it('Should attack, then if hp is less than the attack damage, hp should be set to 0', async function() {
       await squidGameContract.mintCharacterNFT(1, {
-        value: tokenPrice,
+        // value: tokenPrice,
       })
       let boss = await squidGameContract.playerToBoss(owner.address)
       let bossHp = boss[2];
@@ -165,7 +165,7 @@ describe("SquidGame NFT", function () {
 
     it('If a player has 0 hp, and an attack is attempted, the transaction is reverted', async function() {
       await squidGameContract.mintCharacterNFT(1, {
-        value: tokenPrice,
+        // value: tokenPrice,
       })
       let boss = await squidGameContract.playerToBoss(owner.address)
       let bossHp = boss[2];
@@ -183,7 +183,7 @@ describe("SquidGame NFT", function () {
 
     it('If a boss has 0 hp, and an attack is attempted, the transaction is reverted', async function() {
       await squidGameContract.mintCharacterNFT(4, {
-        value: tokenPrice,
+        // value: tokenPrice,
       })
       let boss = await squidGameContract.playerToBoss(owner.address)
       let bossHp = boss[2];
