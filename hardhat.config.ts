@@ -24,26 +24,26 @@ module.exports = {
   networks: {
     rinkeby: {
       url: process.env.ALCHEMY_RINKEBY_RPC_URL,
-      accounts: [process.env.ACCOUNT1_PRIVATE_KEY],
+      accounts: [process.env.RINKEBY_PRIVATE_KEY],
     },
     kovan: {
       url: process.env.ALCHEMY_KOVAN_RPC_URL,
-      accounts: [process.env.ACCOUNT2_PRIVATE_KEY],
+      accounts: [process.env.KOVAN_PRIVATE_KEY],
       saveDeployments: true,
     },
     mumbai: {  // polygon testnet 
       url: process.env.ALCHEMY_MUMBAI_RPC_URL,
-      accounts: [process.env.ACCOUNT1_PRIVATE_KEY],
+      accounts: [process.env.MUMBAI_PRIVATE_KEY],
     },
     polygon: {
       url: process.env.ALCHEMY_POLYGON_RPC_URL,
-      accounts: [process.env.ACCOUNT1_PRIVATE_KEY],
+      accounts: [process.env.POLYGON_PRIVATE_KEY],
     }
   },
   mainnet: {
     chainId: 137,
     url: process.env.ALCHEMY_POLYGON_RPC_URL,
-    accounts: [process.env.ACCOUNT1_PRIVATE_KEY],
+    accounts: [process.env.MAINNET_PRIVATE_KEY],
     // chainId: 1, // ethereum 
     // url: process.env.ALCHEMY_MAINNET_RPC_URL,
     // accounts: [process.env.ACCOUNT2_PRIVATE_KEY],
